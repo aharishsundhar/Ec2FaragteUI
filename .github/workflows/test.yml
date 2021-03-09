@@ -120,9 +120,9 @@ jobs:
           sleep 20s
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $run_task | jq '.tasks[].attachments[].details[1].value')"
           echo "::set-output name=PUBLIC_IP_ADDRESS::$(aws ec2 describe-network-interfaces --network-interface-ids ${{  steps.networkInterfaceId.outputs.NETWORK_ID  }}  | jq -r '.NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp')"
-          echo "${{ run_task }}"
-          echo "${{ NETWORK_ID }}"
-          echo "${{ PUBLIC_IP_ADDRESS }}"
+          echo "$(run_task)"
+          echo "$( NETWORK_ID )"
+          echo "$( PUBLIC_IP_ADDRESS )"
   Upload_S3_Bucket:
     needs: Deploy_backend
     runs-on: ubuntu-latest
