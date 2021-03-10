@@ -17,6 +17,7 @@ env:
   AWS_ECS_CLUSTER_NAME: ${{  secrets.AWS_ECS_CLUSTER_NAME  }}
   PROJECT_NAME: workplace1-9436
   AWS_S3_BUCKET_NAME: workplace1-9436
+  RUNNING_TASK: ${{ steps.networkInterfaceId.outputs.RUN_TASK }}
 
 jobs:
   Prerequisites:
@@ -118,7 +119,7 @@ jobs:
         run: |
           echo "::set-output name=RUN_TASK::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq '.tasks[].taskArn')"
           sleep 20s
-          echo "RunTask " ${{ steps.networkInterfaceId.outputs.RUN_TASK }}
+          echo "RunTask ${{ env.RUNNING_TASK }}"
           
   Upload_S3_Bucket:
     needs: Deploy_backend
