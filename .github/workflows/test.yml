@@ -117,20 +117,20 @@ jobs:
       - name: Run the ECS task definition
         id: networkInterfaceId
         run: |
-          run_task=$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')
+          echo "::set-output name=run_task::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')
           sleep 20s
-          echo $run_task
+          echo ${{ steps.networkInterfaceId.outputs.run_task }}
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $run_task | jq '.tasks[].attachments[].details[1].value')"
           echo ${{ steps.networkInterfaceId.outputs.NETWORK_ID }}
-#       - name: check runtask
-#         run : echo ${{ steps.networkInterfaceId.outputs.RUN_TASK }}
-#       - name: Split RUNTASK
-#         uses: xom9ikk/split@v1
-#         id: split1
-#         with:
-#           string: ${{ steps.networkIntefaceId.outputs.RUN_TASK }}
-#           separator: '/'
-#           limit: -1 
+      - name: check runtask
+        run : echo ${{ steps.networkInterfaceId.outputs.run_task }}
+      - name: Split RUNTASK
+        uses: xom9ikk/split@v1
+        id: split1
+        with:
+          string: ${{ steps.networkIntefaceId.outputs.run_task }}
+          separator: '/'
+          limit: -1 
 #       - name: Split action
 #         uses: xom9ikk/split@v1
 #         with:
@@ -138,11 +138,11 @@ jobs:
 #           minor: ${{ steps.split1.outputs._1 }}
 #           patch: ${{ steps.split1.outputs._2 }}
 #           value: ${{ steps.split1.outputs._3 }}
-#       - name: network describe
-#         id: eniIds
-#         run : |
-#           echo ${{ steps.split1.outputs._0 }} ${{ steps.split1.outputs._1 }} ${{ steps.split1.outputs._2 }} ${{ steps.split1.outputs._3 }}
-#           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split1.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
+      - name: network describe
+        id: eniIds
+        run : |
+          echo ${{ steps.split1.outputs._0 }} ${{ steps.split1.outputs._1 }} ${{ steps.split1.outputs._2 }} ${{ steps.split1.outputs._3 }}
+        
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
