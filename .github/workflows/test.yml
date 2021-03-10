@@ -133,10 +133,11 @@ jobs:
           major: ${{ steps.split1.outputs._0 }}
           minor: ${{ steps.split1.outputs._1 }}
           patch: ${{ steps.split1.outputs._2 }}
+          value: ${{ steps.split1.outputs._3 }}
       - name: network describe
         id: eniIds
         run : |
-          echo ${{ steps.split1.outputs._2 }}
+          echo ${{ steps.split1.outputs._0 }} ${{ steps.split1.outputs._1 }} ${{ steps.split1.outputs._2 }} ${{ steps.split1.outputs._3 }}
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split1.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
           
 #   Upload_S3_Bucket:
