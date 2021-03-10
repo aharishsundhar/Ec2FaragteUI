@@ -128,25 +128,11 @@ jobs:
           msg: ${{ steps.networkInterfaceId.outputs.run_task }}
           seperator: '/'
           max limit: -1
-#       - name: Split RUNTASK
-#         uses: xom9ikk/split@v1
-#         id: split1
-#         with:
-#           string: ${{ steps.networkIntefaceId.outputs.run_task }}
-#           separator: '/'
-#           limit: -1 
-#       - name: Split action
-#         uses: xom9ikk/split@v1
-#         with:
-#           major: ${{ steps.split1.outputs._0 }}
-#           minor: ${{ steps.split1.outputs._1 }}
-#           patch: ${{ steps.split1.outputs._2 }}
-#           value: ${{ steps.split1.outputs._3 }}
       - name: network describe
         id: eniIds
         run : |
-          echo ${{ steps.split.outputs._0 }} ${{ steps.split.outputs._1 }} ${{ steps.split.outputs._2 }} ${{ steps.split.outputs._3 }}
-        
+          echo ${{ steps.split.outputs._2 }}
+          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
