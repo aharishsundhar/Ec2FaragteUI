@@ -118,8 +118,8 @@ jobs:
         run: |
           echo "::set-output name=RUN_TASK::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')"
           sleep 20s
-          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.networkInterfaceId.outputs.RUN_TASK }} | jq '.tasks[].attachments[].details[1].value')"
-          echo "::set-output name=PUBLIC_IP_ADDRESS::$(aws ec2 describe-network-interfaces --network-interface-ids ${{  steps.networkInterfaceId.outputs.NETWORK_ID  }}  | jq -r '.NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp')"
+          
+          
   Upload_S3_Bucket:
     needs: Deploy_backend
     runs-on: ubuntu-latest
