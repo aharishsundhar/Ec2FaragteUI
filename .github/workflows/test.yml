@@ -118,7 +118,7 @@ jobs:
         run: |
           echo "::set-output name=RUN_TASK::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')"
           sleep 20s
-          echo ${{ $RUN_TASK }}
+          echo "$RUN_TASK"
           echo "Run_Task:${{ steps.networkInterfaceId.outputs.RUN_TASK" }}
           
   Upload_S3_Bucket:
