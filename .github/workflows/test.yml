@@ -118,8 +118,12 @@ jobs:
         id: networkInterfaceId
         run: |
           echo "::set-output name=RUN_TASK::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq '.tasks[].taskArn')"
+      - name: Get ids on running task
+        id: GetIp
+        run: |
+          echo "${{ steps.networkInterfaceId.outputs.runtask }}"
           echo ${{ steps.networkInterfaceId.outputs.runtask }}
-          sleep 20s
+
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
