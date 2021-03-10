@@ -117,9 +117,24 @@ jobs:
       - name: Run the ECS task definition
         id: networkInterfaceId
         run: |
-          RUN_TASK=$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq '.tasks[].taskArn')
+          echo "::set-output name=RUN_TASK::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq '.tasks[].taskArn')
           echo $RUN_TASK
-          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $RUN_TASK | jq '.tasks[].attachments[].details[1].value')"
+      - name: Split RUNTASK
+        uses: xom9ikk/split@v1
+        id: split1
+        with:
+          string: ${{ steps.networkIntefaceId.outputs.RUN_TASK }}
+          separator: '/'
+          limit: -1 
+      - name: Split action
+        uses: xom9ikk/split@v1
+        with:
+          major: ${{ steps.split1.outputs._2 }}
+      - name: network describe
+        id: eniIds
+        run : |
+          echo "${{ steps.split1.outputs._2 }}"
+          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split1.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
