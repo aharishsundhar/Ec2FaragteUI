@@ -120,17 +120,21 @@ jobs:
           echo "::set-output name=run_task::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')"
           sleep 20s
           echo ${{ steps.networkInterfaceId.outputs.run_task }}
-          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $run_task | jq '.tasks[].attachments[].details[1].value')"
-          echo ${{ steps.networkInterfaceId.outputs.NETWORK_ID }}
       - name: check runtask
         run : echo ${{ steps.networkInterfaceId.outputs.run_task }}
-      - name: Split RUNTASK
-        uses: xom9ikk/split@v1
-        id: split1
+      - uses: jungwinter/split@v1
+        id: split
         with:
-          string: ${{ steps.networkIntefaceId.outputs.run_task }}
-          separator: '/'
-          limit: -1 
+          msg: ${{ steps.networkInterfaceId.outputs.run_task }}
+          seperator: '/'
+          max limit: -1
+#       - name: Split RUNTASK
+#         uses: xom9ikk/split@v1
+#         id: split1
+#         with:
+#           string: ${{ steps.networkIntefaceId.outputs.run_task }}
+#           separator: '/'
+#           limit: -1 
 #       - name: Split action
 #         uses: xom9ikk/split@v1
 #         with:
@@ -141,7 +145,7 @@ jobs:
       - name: network describe
         id: eniIds
         run : |
-          echo ${{ steps.split1.outputs._0 }} ${{ steps.split1.outputs._1 }} ${{ steps.split1.outputs._2 }} ${{ steps.split1.outputs._3 }}
+          echo ${{ steps.split.outputs._0 }} ${{ steps.split.outputs._1 }} ${{ steps.split.outputs._2 }} ${{ steps.split.outputs._3 }}
         
           
 #   Upload_S3_Bucket:
