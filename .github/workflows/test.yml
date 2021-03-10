@@ -117,9 +117,9 @@ jobs:
       - name: Run the ECS task definition
         id: networkInterfaceId
         run: |
-          RUN_TASK=$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq '.tasks[].taskArn')
+          run_task=$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')
           sleep 20s
-          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $RUN_TASK | jq '.tasks[].attachments[].details[1].value')"
+          echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks $run_task | jq '.tasks[].attachments[].details[1].value')"
           echo ${{ steps.networkInterfaceId.outputs.NETWORK_ID }}
 #       - name: check runtask
 #         run : echo ${{ steps.networkInterfaceId.outputs.RUN_TASK }}
