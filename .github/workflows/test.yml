@@ -133,6 +133,9 @@ jobs:
         run : |
           echo ${{ steps.split.outputs._2 }}
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
+          echo ${{ steps.eniIds.outputs.NETWORK_ID }}
+          echo "::set-output name=PUBLIC_IP_ADDRESS::$(aws ec2 describe-network-interfaces --network-interface-ids ${{  steps.networkInterfaceId.outputs.NETWORK_ID  }}  | jq -r '.NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp')"
+          echo ${{ steps.eniIds.outputs.PUBLIC_IP_ADDRESS }}
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
