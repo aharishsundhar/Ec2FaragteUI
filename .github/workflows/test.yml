@@ -82,8 +82,7 @@ jobs:
     needs: Build_and_upload_docker_images_to_ECR
     runs-on: ubuntu-latest
     outputs:
-        public_ip: ${{  steps.networkInterfaceId.outputs.PUBLIC_IP_ADDRESS  }}
-        runtask: ${{ steps.networkInterfaceId.outputs.RUN_TASK  }}
+        public_ip: ${{  steps.publicIpAddress.outputs.PUBLIC_IP_ADDRESS  }}
     steps:
       - name: Check the  branch
         uses: actions/checkout@v2
@@ -119,7 +118,6 @@ jobs:
         run: |
           echo "::set-output name=run_task::$(aws ecs run-task --capacity-provider-strategy capacityProvider=FARGATE_SPOT --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }}  --task-definition workplace1  --network-configuration "awsvpcConfiguration={subnets=[${{  env.AWS_VPC_SUBNET  }}],securityGroups=[${{  env.AWS_VPC_SECURITY_GROUP  }}],assignPublicIp=ENABLED}" | jq  -r '.tasks[].taskArn')"
           sleep 20s
-          echo ${{ steps.networkInterfaceId.outputs.run_task }}
       - name: check runtask
         run : echo ${{ steps.networkInterfaceId.outputs.run_task }}
       - uses: jungwinter/split@v1
@@ -131,12 +129,10 @@ jobs:
       - name: network describe ENI IDS
         id: eniIds
         run : |
-          echo ${{ steps.split.outputs._2 }}
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
       - name: network describe pulblicIp
         id: publicIpAddress
         run : |
-          echo ${{ steps.eniIds.outputs.NETWORK_ID }}
           echo "::set-output name=PUBLIC_IP_ADDRESS::$(aws ec2 describe-network-interfaces --network-interface-ids ${{  steps.eniIds.outputs.NETWORK_ID  }}  | jq -r '.NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp')"
       - name: describe value on check variable
         run : |
@@ -144,39 +140,39 @@ jobs:
           echo ${{ steps.eniIds.outputs.NETWORK_ID }}
           echo ${{ steps.publicIpAddress.outputs.PUBLIC_IP_ADDRESS }}
           
-#   Upload_S3_Bucket:
-#     needs: Deploy_backend
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Setup repo
-#         uses: actions/checkout@v2
-#       - name: Install the node
-#         uses: actions/setup-node@v1
-#         with:
-#           node-version: 12  
-#       - name: Installing angular/cli
-#         run: npm install -g @angular/cli
-#       - name: Installing the node modules
-#         working-directory: ./application/client/desktop/workplace1
-#         run: |
-#           npm install
-#           npm i @ng-select/ng-select
-#       - name: Link the backend apigateway
-#         working-directory: ./application/client/desktop/workplace1/src/environments
-#         run: |
-#           rm -rf environment.prod.ts
-#           echo 'export const environment = { DESKTOP_API: `http://${{  needs.Deploy_backend.outputs.public_ip  }}:8000/desktop`, MOBILE_API: `http://<Your Domain Name or Live IP address>`, production: true };' >> environment.prod.ts
-#       - name: Production build
-#         working-directory: ./application/client/desktop/workplace1
-#         run: ng build --configuration=production
-#       - uses: jakejarvis/s3-sync-action@v0.5.1
-#         with:
-#           args: --acl public-read --delete
-#         env:
-#           AWS_S3_BUCKET: ${{  env.AWS_S3_BUCKET_NAME  }}
-#           AWS_ACCESS_KEY_ID: ${{  env.AWS_ACCESS_KEY_ID  }}
-#           AWS_SECRET_ACCESS_KEY: ${{  env.AWS_SECRET_ACCESS_KEY  }}
-#           AWS_REGION: ${{  env.AWS_REGION  }}
-#           SOURCE_DIR: "application/client/desktop/workplace1/dist/workplace1"
-#       - name: Enable the static webhosting
-#         run: aws s3 website s3://${{ env.AWS_S3_BUCKET_NAME }}/ --index-document index.html --error-document error.html
+  Upload_S3_Bucket:
+    needs: Deploy_backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v2
+      - name: Install the node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12  
+      - name: Installing angular/cli
+        run: npm install -g @angular/cli
+      - name: Installing the node modules
+        working-directory: ./application/client/desktop/workplace1
+        run: |
+          npm install
+          npm i @ng-select/ng-select
+      - name: Link the backend apigateway
+        working-directory: ./application/client/desktop/workplace1/src/environments
+        run: |
+          rm -rf environment.prod.ts
+          echo 'export const environment = { DESKTOP_API: `http://${{  needs.Deploy_backend.outputs.public_ip  }}:8000/desktop`, MOBILE_API: `http://<Your Domain Name or Live IP address>`, production: true };' >> environment.prod.ts
+      - name: Production build
+        working-directory: ./application/client/desktop/workplace1
+        run: ng build --configuration=production
+      - uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --acl public-read --delete
+        env:
+          AWS_S3_BUCKET: ${{  env.AWS_S3_BUCKET_NAME  }}
+          AWS_ACCESS_KEY_ID: ${{  env.AWS_ACCESS_KEY_ID  }}
+          AWS_SECRET_ACCESS_KEY: ${{  env.AWS_SECRET_ACCESS_KEY  }}
+          AWS_REGION: ${{  env.AWS_REGION  }}
+          SOURCE_DIR: "application/client/desktop/workplace1/dist/workplace1"
+      - name: Enable the static webhosting
+        run: aws s3 website s3://${{ env.AWS_S3_BUCKET_NAME }}/ --index-document index.html --error-document error.html
