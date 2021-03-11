@@ -128,13 +128,21 @@ jobs:
           msg: ${{ steps.networkInterfaceId.outputs.run_task }}
           seperator: '/'
           max limit: -1
-      - name: network describe
+      - name: network describe ENI IDS
         id: eniIds
         run : |
           echo ${{ steps.split.outputs._2 }}
           echo "::set-output name=NETWORK_ID::$(aws ecs describe-tasks --cluster ${{  env.AWS_ECS_CLUSTER_NAME  }} --tasks ${{ steps.split.outputs._2 }} | jq '.tasks[].attachments[].details[1].value')"
-          echo $NETWORK_ID
-
+      - name: network describe pulblicIp
+        id: publicIpAddress
+        run : |
+          echo ${{ steps.eniIds.outputs.NETWORK_ID }}
+          echo "::set-output name=PUBLIC_IP_ADDRESS::$(aws ec2 describe-network-interfaces --network-interface-ids ${{  steps.eniIds.outputs.NETWORK_ID  }}  | jq -r '.NetworkInterfaces[].PrivateIpAddresses[].Association.PublicIp')"
+      - name: describe value on check variable
+        run : |
+          echo ${{ steps.split.outputs._2 }}
+          echo ${{ steps.eniIds.outputs.NETWORK_ID }}
+          echo ${{ steps.publicIpAddress.outputs.PUBLIC_IP_ADDRESS }}
           
 #   Upload_S3_Bucket:
 #     needs: Deploy_backend
